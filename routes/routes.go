@@ -44,7 +44,7 @@ func PhyRoutes(e *gin.Engine) *gin.Engine {
 }
 func DataRoutes(e *gin.Engine) *gin.Engine {
 	dataRoutes := e.Group("/data")
-	dataRoutes.GET("", controller.ShowData)
+	dataRoutes.POST(":id", controller.ShowData)
 	return e
 }
 func CollectRoutes(e *gin.Engine) *gin.Engine {
