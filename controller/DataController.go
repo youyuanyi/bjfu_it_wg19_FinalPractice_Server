@@ -4,7 +4,6 @@ import (
 	"WeatherServer/common"
 	"WeatherServer/model"
 	"WeatherServer/response"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -44,32 +43,35 @@ func ShowData(c *gin.Context) {
 		dataName = "*"
 	}
 
-	var querys []string
-	var args []string
-	// 若设备节点在
-	if nodeID != "null" {
-		querys = append(querys, "node_id = ?")
-		args = append(args, nodeID)
-	}
-
 	// 先获取当前用户的id
 	uid := c.Params.ByName("id")
 	// 从userEquipments表中查询和该用户相关的设备
 	var equipmentList []model.Userequipments
 	db.Where("uid= ? ", uid).Find(&equipmentList)
+
 	// 取出所有eid
 	var eidList []uint
 	// 构造eid-eName列表,作为前端所需的options
-	var equipList []model.Node
+	var equipList []model.Node // 用户当前想查看的
+	var eidListAll []uint
+	var equipListAll []model.Node
+	// 如果没有指定设备
 	if nodeID == "0" {
 		for _, equip := range equipmentList {
 			eidList = append(eidList, equip.Eid)
+			eidListAll = append(eidListAll, equip.Eid)
+
 		}
 	} else {
+		// 指定了设备
+
 		iNodeID, _ := strconv.Atoi(nodeID)
 		eidList = append(eidList, uint(iNodeID))
+		for _, equip := range equipmentList {
+			eidListAll = append(eidListAll, equip.Eid)
+		}
 	}
-
+	db.Table("nodes").Where("`id` IN (?)", eidListAll).Find(&equipListAll)
 	db.Table("nodes").Where("`id` IN (?)", eidList).Find(&equipList)
 	// 取出该eidList所对应的所有数据
 	var allData []model.Data
@@ -89,7 +91,7 @@ func ShowData(c *gin.Context) {
 			return
 		}
 	}
-	fmt.Println("len(allData):", len(allData))
+
 	// 取出所有数据后,过滤时间
 	var filterTimeList []model.Data
 	if hasT1 && hasT2 {
@@ -129,10 +131,11 @@ func ShowData(c *gin.Context) {
 	db.Find(&phyList)
 
 	response.Success(c, gin.H{
-		"phyList":   phyList,
-		"equipList": equipList,
-		"dataList":  resList,
-		"count":     count,
+		"phyList":      phyList,
+		"equipList":    equipList,
+		"equipListAll": equipListAll,
+		"dataList":     resList,
+		"count":        count,
 	}, "查找成功")
 
 }
