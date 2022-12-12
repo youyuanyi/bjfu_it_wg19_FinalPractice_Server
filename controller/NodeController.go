@@ -4,8 +4,12 @@ import (
 	"WeatherServer/common"
 	"WeatherServer/model"
 	"WeatherServer/response"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"net"
 	"net/http"
+	"os"
+	"strconv"
 )
 
 // ListNodes 展示设备
@@ -112,6 +116,7 @@ func EditNode(c *gin.Context) {
 		response.Fail(c, nil, "设备信息不存在")
 		return
 	}
+	// 先和server端进行通信
 
 	var requestNode model.Node
 	c.Bind(&requestNode)
@@ -120,10 +125,65 @@ func EditNode(c *gin.Context) {
 		State:    requestNode.State,
 		Duration: requestNode.Duration,
 	}
+	msg := "set duration " + strconv.Itoa(requestNode.Duration)
+	ConnectToC(msg)
 	if err := db.Model(&node).Update(newNode).Error; err != nil {
 		response.Fail(c, nil, "修改失败")
 		return
 	}
+
+	c.JSON(200, gin.H{
+		"code": 200,
+		"msg":  "修改成功",
+	})
+}
+func checkError(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func ConnectToC(msg string) {
+	serverAddr := "127.0.0.1" + ":" + strconv.Itoa(6789)
+	conn, err := net.Dial("udp", serverAddr)
+	checkError(err)
+
+	defer conn.Close()
+
+	line := msg
+	lineLen := len(line)
+
+	n := 0
+	MAXN := 200
+	for written := 0; written < lineLen; written += n {
+		var toWrite string
+		if lineLen-written > MAXN {
+			toWrite = line[written : written+MAXN]
+		} else {
+			toWrite = line[written:]
+		}
+
+		n, err = conn.Write([]byte(toWrite))
+		checkError(err)
+
+		fmt.Println("Write:", toWrite)
+
+		msg := make([]byte, MAXN)
+		n, err = conn.Read(msg)
+		checkError(err)
+
+		fmt.Println("Response:", string(msg))
+	}
+
+}
+
+func SetSystemTime(c *gin.Context) {
+	sysTime := c.DefaultQuery("time", "")
+
+	fmt.Println("startTime:", sysTime)
+	msg := "set time " + sysTime
+	ConnectToC(msg)
 	c.JSON(200, gin.H{
 		"code": 200,
 		"msg":  "修改成功",

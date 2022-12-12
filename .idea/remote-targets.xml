@@ -4,7 +4,7 @@
     <targets>
       <target name="root@1.15.56.246:22" type="ssh/sftp" uuid="061dee34-0329-4ee8-a1eb-f3af3ba3b0f0">
         <config>
-          <option name="projectRootOnTarget" value="/home/yjc/workspace/go/WeatherServer" />
+          <option name="projectRootOnTarget" value="/home/yjc/workspace/go/src/WeatherServer" />
           <option name="serverName" value="root@1.15.56.246:22 password" />
         </config>
         <ContributedStateBase type="GoLanguageRuntime">

@@ -8,3 +8,7 @@ type Physical struct {
 	Meaning      string `gorm:"varchar(20);not null" json:"meaning"`
 	Conversion   string `gorm:"varchar(20);not null" json:"conversion"`
 }
+
+type SystemTime struct {
+	SysTime string `json:"sysTime"`
+}

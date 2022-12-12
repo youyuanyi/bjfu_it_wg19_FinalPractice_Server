@@ -28,11 +28,12 @@ func UserMgrRoutes(e *gin.Engine) *gin.Engine {
 
 func NodeRoutes(e *gin.Engine) *gin.Engine {
 	nodeRoutes := e.Group("/node")
-	nodeRoutes.GET("", controller.GetAllNode)       // 获取所有设备
-	nodeRoutes.GET(":id", controller.ListNodes)     // 展示当前用户的设备
-	nodeRoutes.POST("", controller.AddNode)         // 添加用户
-	nodeRoutes.DELETE(":id", controller.DeleteNode) // 删除设备,id是设备id
-	nodeRoutes.PUT(":id", controller.EditNode)      // 修改设备,id是设备id
+	nodeRoutes.GET("", controller.GetAllNode)            // 获取所有设备
+	nodeRoutes.GET(":id", controller.ListNodes)          // 展示当前用户的设备
+	nodeRoutes.POST("", controller.AddNode)              // 添加用户
+	nodeRoutes.DELETE(":id", controller.DeleteNode)      // 删除设备,id是设备id
+	nodeRoutes.PUT(":id", controller.EditNode)           // 修改设备,id是设备id
+	nodeRoutes.POST("setTime", controller.SetSystemTime) // 设置系统时间
 	return e
 }
 

@@ -92,7 +92,13 @@ func ShowData(c *gin.Context) {
 			return
 		}
 	}
-
+	if len(allData) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code": 404,
+			"msg":  "查询不到相关数据",
+		})
+		return
+	}
 	// 取出所有数据后,过滤时间
 	var filterTimeList []model.Data
 	if hasT1 && hasT2 {

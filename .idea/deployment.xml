@@ -5,7 +5,7 @@
       <paths name="Tencent">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/yjc/workspace/go/WeatherServer" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/yjc/workspace/go/src/WeatherServer" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
