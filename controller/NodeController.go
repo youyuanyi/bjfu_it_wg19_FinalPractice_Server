@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -126,7 +125,11 @@ func EditNode(c *gin.Context) {
 		Duration: requestNode.Duration,
 	}
 	msg := "set duration " + strconv.Itoa(requestNode.Duration)
-	ConnectToC(msg)
+	if err := ConnectToC(msg); err != nil {
+		response.Fail(c, nil, "Server无响应，取消修改")
+		return
+	}
+
 	if err := db.Model(&node).Update(newNode).Error; err != nil {
 		response.Fail(c, nil, "修改失败")
 		return
@@ -137,17 +140,24 @@ func EditNode(c *gin.Context) {
 		"msg":  "修改成功",
 	})
 }
-func checkError(err error) {
+func checkError(err error) (er error) {
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
+	return nil
 }
 
-func ConnectToC(msg string) {
-	serverAddr := "127.0.0.1" + ":" + strconv.Itoa(6789)
-	conn, err := net.Dial("udp", serverAddr)
-	checkError(err)
+func ConnectToC(msg string) (err error) {
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
+		IP:   net.IPv4(127, 0, 0, 1),
+		Port: 6789,
+	})
+
+	if er := checkError(err); er != nil {
+		conn.Close()
+		return err
+	}
 
 	defer conn.Close()
 
@@ -165,17 +175,22 @@ func ConnectToC(msg string) {
 		}
 
 		n, err = conn.Write([]byte(toWrite))
-		checkError(err)
+		if er := checkError(err); er != nil {
+			conn.Close()
+			return err
+		}
 
 		fmt.Println("Write:", toWrite)
 
 		msg := make([]byte, MAXN)
 		n, err = conn.Read(msg)
-		checkError(err)
-
+		if er := checkError(err); er != nil {
+			conn.Close()
+			return err
+		}
 		fmt.Println("Response:", string(msg))
 	}
-
+	return nil
 }
 
 func SetSystemTime(c *gin.Context) {
@@ -183,7 +198,11 @@ func SetSystemTime(c *gin.Context) {
 
 	fmt.Println("startTime:", sysTime)
 	msg := "set time " + sysTime
-	ConnectToC(msg)
+	if err := ConnectToC(msg); err != nil {
+		response.Fail(c, nil, "Server无响应，取消修改")
+		return
+	}
+
 	c.JSON(200, gin.H{
 		"code": 200,
 		"msg":  "修改成功",
