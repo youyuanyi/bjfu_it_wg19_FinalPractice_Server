@@ -13,8 +13,8 @@ var DB *gorm.DB
 func InitDB() *gorm.DB {
 	driverName := "mysql"
 	user := "root"
-	password := "YJC706989"
-	host := "1.15.56.246"
+	password := ""
+	host := "127.0.0.1"
 	port := "3306"
 	database := "ZhuanYeShiJian"
 	charset := "utf8"
