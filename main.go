@@ -21,5 +21,5 @@ func main() {
 	// 启动路由
 	routes.CollectRoutes(r)
 	// 启动服务
-	panic(r.Run(":8080"))
+	panic(r.Run(":9027"))
 }
