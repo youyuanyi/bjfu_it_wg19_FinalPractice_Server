@@ -12,6 +12,12 @@ import (
 )
 
 // ListNodes 展示设备
+// @Tags 设备管理
+// @Summary 展示当前用户可见设备
+// @Produce  json
+// @Param id path int true "当前用户的ID"
+// @Success 200 {object} SwaggerResponseData "返回设备列表"
+// @Router /node/:id [get]
 func ListNodes(c *gin.Context) {
 	db := common.GetDB()
 	userId := c.Params.ByName("id")
@@ -36,6 +42,13 @@ func ListNodes(c *gin.Context) {
 		"nodes": nodes,
 	}, "查找成功")
 }
+
+// GetAllNode
+// @Tags 设备管理
+// @Summary 获取所有设备信息
+// @Produce  json
+// @Success 200 {object} SwaggerResponseData "返回设备列表"
+// @Router /node [get]
 func GetAllNode(c *gin.Context) {
 	db := common.GetDB()
 	var nodeList []model.Node
@@ -45,6 +58,16 @@ func GetAllNode(c *gin.Context) {
 	}, "登录设备信息成功")
 }
 
+// AddNode
+// @Tags 设备管理
+// @Summary 管理员新建设备
+// @Description
+// @Param user body  model.Node true "新设备"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 442 {object} SwaggerResponseData "设备已存在"
+// @Router /node [post]
 func AddNode(c *gin.Context) {
 	db := common.GetDB()
 	var node model.Node
@@ -84,6 +107,15 @@ func AddNode(c *gin.Context) {
 	})
 }
 
+// DeleteNode
+// @Tags 设备管理
+// @Summary 管理员删除设备
+// @Description
+// @Param id path int true "具体删除的设备ID"
+// @Produce json
+// @Success 200 {object} SwaggerResponseData
+// @Failure 400 {object} SwaggerResponseData "用户不存在"
+// @Router /node/:id [delete]
 func DeleteNode(c *gin.Context) {
 	db := common.GetDB()
 	eid := c.Param("id")
@@ -107,6 +139,16 @@ func DeleteNode(c *gin.Context) {
 }
 
 // EditNode 修改设备信息
+// @Tags 设备管理
+// @Summary 管理员修改设备信息
+// @Description
+// @Param node body  model.Node true "新设备"
+// @Param id path int true "具体修改的设备的ID"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 400 {object} SwaggerResponseData "设备不存在"
+// @Router /node/:id [put]
 func EditNode(c *gin.Context) {
 	db := common.GetDB()
 	eid := c.Params.ByName("id")
@@ -124,7 +166,7 @@ func EditNode(c *gin.Context) {
 		State:    requestNode.State,
 		Duration: requestNode.Duration,
 	}
-	msg := "set duration " + strconv.Itoa(requestNode.Duration)
+	msg := "set duration " + strconv.Itoa(int(node.ID)) + " " + strconv.Itoa(requestNode.Duration)
 	if err := ConnectToC(msg); err != nil {
 		response.Fail(c, nil, "Server无响应，取消修改")
 		return
@@ -155,6 +197,7 @@ func ConnectToC(msg string) (err error) {
 	})
 
 	if er := checkError(err); er != nil {
+		fmt.Println("Connect failed")
 		conn.Close()
 		return err
 	}
@@ -193,11 +236,21 @@ func ConnectToC(msg string) (err error) {
 	return nil
 }
 
+// SetSystemTime
+// @Tags 设备管理
+// @Summary 管理员修改设备系统时间
+// @Description
+// @Param time query string true "yy.mm.dd hh:mm:ss"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 442 {object} SwaggerResponseData "Server无响应"
+// @Router /node/setTime [post]
 func SetSystemTime(c *gin.Context) {
 	sysTime := c.DefaultQuery("time", "")
 
 	fmt.Println("startTime:", sysTime)
-	msg := "set time " + sysTime
+	msg := "set time 1 " + sysTime
 	if err := ConnectToC(msg); err != nil {
 		response.Fail(c, nil, "Server无响应，取消修改")
 		return

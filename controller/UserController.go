@@ -2,6 +2,7 @@ package controller
 
 import (
 	"WeatherServer/common"
+	_ "WeatherServer/docs" // swag init 生成的doc路径
 	"WeatherServer/model"
 	"WeatherServer/response"
 	"fmt"
@@ -12,7 +13,27 @@ import (
 	"strings"
 )
 
-// Register 注册
+type SwaggerResponse struct {
+	Code int    `json:"code"` // 响应码
+	Msg  string `json:"msg"`  // 描述
+}
+
+type SwaggerResponseData struct {
+	Code int               `json:"code"` // 响应码
+	Msg  string            `json:"msg"`  // 描述
+	Data map[string]string `json:"data"` // 返回数据
+}
+
+// Register
+// @Tags 用户管理
+// @Summary 用户注册
+// @Description 用于管理员注册新用户
+// @Param user body  model.User true "新用户，传入用户名和密码"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 442 {object} SwaggerResponseData "用户已存在"
+// @Router /register [post]
 func Register(c *gin.Context) {
 	db := common.GetDB()
 	var requestUser model.User
@@ -47,6 +68,17 @@ func Register(c *gin.Context) {
 }
 
 // Login 登录
+// @Tags 用户管理
+// @Summary 用户登录
+// @Description 用户输入用户名和密码登录
+// @Param user body  model.User true "用户对象，包括用户名和密码两个属性"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponseData
+// @Failure 442 {object} SwaggerResponseData"用户不存在"
+// @Failure 422 {object} SwaggerResponseData "密码错误"
+// @Failure 500 {object} SwaggerResponseData "系统发放token异常"
+// @Router /login [post]
 func Login(c *gin.Context) {
 	db := common.GetDB()
 	// 获取参数
@@ -90,6 +122,12 @@ func Login(c *gin.Context) {
 	})
 }
 
+// GetInfo
+// @Tags 用户管理
+// @Summary 获取登录用户的信息
+// @Produce  json
+// @Success 200 {object} SwaggerResponseData "返回用户id，头像avatar，用户名name,用户角色role"
+// @Router /user [get]
 func GetInfo(c *gin.Context) {
 	// 获取上下文中的用户信息
 	user, _ := c.Get("user")
@@ -105,6 +143,16 @@ func ToStringArray(l []string) (a model.Array) {
 	return l
 }
 
+// GetAllUsers 管理员获取所有用户信息及其设备
+// @Tags 用户管理
+// @Summary 管理员获取所有用户信息及其设备
+// @Description
+// @Param pageNum query  int false "当前页数，默认为1"
+// @Param pageSize query  int false "每页数据个数，默认为5"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponseData "返回用户列表users，用户个数count"
+// @Router /user/users [post]
 func GetAllUsers(c *gin.Context) {
 	db := common.GetDB()
 	// 当前页数
@@ -145,6 +193,15 @@ func GetAllUsers(c *gin.Context) {
 }
 
 // AddUser 管理员添加用户
+// @Tags 用户管理
+// @Summary 管理员添加用户
+// @Description
+// @Param user body  model.User true "新用户的用户名、密码"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 442 {object} SwaggerResponseData "用户已存在"
+// @Router /user [post]
 func AddUser(c *gin.Context) {
 	db := common.GetDB()
 
@@ -197,6 +254,16 @@ func AddUser(c *gin.Context) {
 }
 
 // EditUser 管理员修改用户信息
+// @Tags 用户管理
+// @Summary 管理员修改用户信息
+// @Description
+// @Param user body  model.User true "新用户的用户名、密码"
+// @Param id path int true "具体修改的用户的ID"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 400 {object} SwaggerResponseData "用户不存在"
+// @Router /user [put]
 func EditUser(c *gin.Context) {
 	db := common.GetDB()
 	var requestUser model.UserInfo
@@ -244,6 +311,14 @@ func EditUser(c *gin.Context) {
 }
 
 // DelUser 管理员删除用户
+// @Tags 用户管理
+// @Summary 管理员修改用户信息
+// @Description
+// @Param id path int true "具体修改的用户的ID"
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Failure 400 {object} SwaggerResponseData "用户不存在"
+// @Router /user [delete]
 func DelUser(c *gin.Context) {
 	db := common.GetDB()
 	uid := c.Param("id")

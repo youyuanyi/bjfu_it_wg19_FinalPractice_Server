@@ -12,6 +12,20 @@ import (
 	"time"
 )
 
+// ShowData
+// @Tags 数据管理
+// @Summary 显示当前用户可见的所有数据
+// @Description
+// @Param pageNum query int  false "当前页数,默认为1"
+// @Param pageSize query  int false "每页大小，默认为7"
+// @Param id query int true "当前用户id"
+// @Param nodeID body  int true "条件筛选: 设备ID"
+// @Param dataName body  string true "条件筛选: 物理量"
+// @Param time body  string true "条件筛选: 时间:yy.mm.dd hh:mm:ss - yy.mm.dd hh:mm:ss"
+// @Accept json
+// @Produce json
+// @Success 200 {object} SwaggerResponse
+// @Router /data [post]
 func ShowData(c *gin.Context) {
 	db := common.GetDB()
 
@@ -23,6 +37,7 @@ func ShowData(c *gin.Context) {
 	nodeID := c.DefaultQuery("nodeID", "")
 	dataName := c.DefaultQuery("dataName", "*")
 	timeRange := c.DefaultQuery("time", "")
+
 	var startTime string
 	var endTime string
 	var t1 time.Time
@@ -87,6 +102,7 @@ func ShowData(c *gin.Context) {
 
 	} else {
 		// 指定了字段
+		dataName = "data" + dataName[2:]
 		if err := db.Table("data").Select("id,area_id,node_id,date," + dataName).Find(&allData).Error; err != nil {
 			response.Fail(c, nil, "查询数据失败")
 			return
@@ -157,6 +173,16 @@ func ShowData(c *gin.Context) {
 
 }
 
+// DownloadExcel 导出数据
+// @Tags 数据管理
+// @Summary 导出当前用户的所有可见设备的数据
+// @Produce  json
+// @Param id query int true "当前用户id"
+// @Param nodeID body  int true "条件筛选: 设备ID"
+// @Param dataName body  string true "条件筛选: 物理量"
+// @Param time body  string true "条件筛选: 时间:yy.mm.dd hh:mm:ss - yy.mm.dd hh:mm:ss"
+// @Success 200 {object} SwaggerResponseData "下载成功"
+// @Router /data/download/:id [get]
 func DownloadExcel(c *gin.Context) {
 	db := common.GetDB()
 	// 获取设备节点，数据种类，时间段参数
@@ -227,6 +253,7 @@ func DownloadExcel(c *gin.Context) {
 
 	} else {
 		// 指定了字段
+		dataName = "data" + dataName[2:]
 		if err := db.Table("data").Select("id,area_id,node_id,date," + dataName).Find(&allData).Error; err != nil {
 			response.Fail(c, nil, "查询数据失败")
 			return
@@ -262,21 +289,47 @@ func DownloadExcel(c *gin.Context) {
 		}
 	}
 
+	data1 := "data1"
+	data2 := "data2"
+	data3 := "data3"
+	data4 := "data4"
+	data5 := "data5"
+	data6 := "data6"
+	data7 := "data7"
+	data8 := "data8"
+	data9 := "data9"
+	if nodeID != "0" {
+		var phyList []model.Physical
+		db.Where("node_id = ?", nodeID).Find(&phyList)
+		var fileds [9]string
+		for index, v := range phyList {
+			fileds[index] = v.DataName
+		}
+		data1 = fileds[0]
+		data2 = fileds[1]
+		data3 = fileds[2]
+		data4 = fileds[3]
+		data5 = fileds[4]
+		data6 = fileds[5]
+		data7 = fileds[6]
+		data8 = fileds[7]
+		data9 = fileds[8]
+	}
 	// 把filterList导入到EXCEL表中
 	xlsx := excelize.NewFile()
 	xlsx.SetCellValue("Sheet1", "A1", "编号")
 	xlsx.SetCellValue("Sheet1", "B1", "区域编号")
 	xlsx.SetCellValue("Sheet1", "C1", "设备编号")
 	xlsx.SetCellValue("Sheet1", "D1", "日期")
-	xlsx.SetCellValue("Sheet1", "E1", "温度")
-	xlsx.SetCellValue("Sheet1", "F1", "湿度")
-	xlsx.SetCellValue("Sheet1", "G1", "降雨量")
-	xlsx.SetCellValue("Sheet1", "H1", "海拔")
-	xlsx.SetCellValue("Sheet1", "I1", "PM2.5")
-	xlsx.SetCellValue("Sheet1", "J1", "风向")
-	xlsx.SetCellValue("Sheet1", "K1", "风速")
-	xlsx.SetCellValue("Sheet1", "L1", "PM10")
-	xlsx.SetCellValue("Sheet1", "M1", "压强")
+	xlsx.SetCellValue("Sheet1", "E1", data1)
+	xlsx.SetCellValue("Sheet1", "F1", data2)
+	xlsx.SetCellValue("Sheet1", "G1", data3)
+	xlsx.SetCellValue("Sheet1", "H1", data4)
+	xlsx.SetCellValue("Sheet1", "I1", data5)
+	xlsx.SetCellValue("Sheet1", "J1", data6)
+	xlsx.SetCellValue("Sheet1", "K1", data7)
+	xlsx.SetCellValue("Sheet1", "L1", data8)
+	xlsx.SetCellValue("Sheet1", "M1", data9)
 
 	for i, v := range filterList {
 		curIndex := i + 2
@@ -285,15 +338,15 @@ func DownloadExcel(c *gin.Context) {
 		xlsx.SetCellValue("Sheet1", "B"+strIndex, v.AreaID)
 		xlsx.SetCellValue("Sheet1", "C"+strIndex, v.NodeID)
 		xlsx.SetCellValue("Sheet1", "D"+strIndex, v.Date)
-		xlsx.SetCellValue("Sheet1", "E"+strIndex, v.Temperature)
-		xlsx.SetCellValue("Sheet1", "F"+strIndex, v.Humidity)
-		xlsx.SetCellValue("Sheet1", "G"+strIndex, v.Rainfall)
-		xlsx.SetCellValue("Sheet1", "H"+strIndex, v.Altitude)
-		xlsx.SetCellValue("Sheet1", "I"+strIndex, v.PM2Dot5)
-		xlsx.SetCellValue("Sheet1", "J"+strIndex, v.WindDirection)
-		xlsx.SetCellValue("Sheet1", "K"+strIndex, v.WindSpeed)
-		xlsx.SetCellValue("Sheet1", "L"+strIndex, v.PM10)
-		xlsx.SetCellValue("Sheet1", "M"+strIndex, v.Pressure)
+		xlsx.SetCellValue("Sheet1", "E"+strIndex, v.Data1)
+		xlsx.SetCellValue("Sheet1", "F"+strIndex, v.Data2)
+		xlsx.SetCellValue("Sheet1", "G"+strIndex, v.Data3)
+		xlsx.SetCellValue("Sheet1", "H"+strIndex, v.Data4)
+		xlsx.SetCellValue("Sheet1", "I"+strIndex, v.Data5)
+		xlsx.SetCellValue("Sheet1", "J"+strIndex, v.Data6)
+		xlsx.SetCellValue("Sheet1", "K"+strIndex, v.Data7)
+		xlsx.SetCellValue("Sheet1", "L"+strIndex, v.Data8)
+		xlsx.SetCellValue("Sheet1", "M"+strIndex, v.Data9)
 	}
 	// 返回文件流
 	c.Header("Content-Type", "application/octet-stream")

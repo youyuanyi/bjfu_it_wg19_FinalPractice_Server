@@ -32,7 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		// 提取token的有效部分
+		// 提取token的有效部分:Bearer xxxxx
 		tokenString = tokenString[7:]
 		// 解析token
 		token, claims, err := common.ParseToken(tokenString)
